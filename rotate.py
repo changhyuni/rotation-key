@@ -11,7 +11,19 @@ resource = boto3.resource('iam')
 client = boto3.client("iam")
 
 KEY = 'LastUsedDate'
+AFTER_DAYS = 90
+
 OldkeyList = []
+email_text += += f"""
+To learn how to rotate your AWS Access Key, please read the official guide at https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_RotateAccessKey
+If you have any question, please don't hesitate to contact the Support Team at changhyun.kim@example.com.
+
+This automatic reminder will be sent again in {AFTER_DAYS} days, if the key(s) will not be rotated.
+
+Regards,
+Your lovely Support Team
+"""
+
 
 def get_old_access_key():
     for user in resource.users.all():
@@ -27,7 +39,7 @@ def get_old_access_key():
                 numOfDays = diff_dates(utc_to_local(datetime.utcnow()), utc_to_local(CreatedDate))
                 LastUsed = client.get_access_key_last_used(AccessKeyId=AccessId)
 
-                if numOfDays <= 6:
+                if numOfDays <= AFTER_DAYS:
                     OldkeyList.append(user.user_name+AccessId)
                 # print(user.user_name, numOfDays)
 
@@ -39,10 +51,19 @@ get_old_access_key()
 
 def delete_key(access_key, username):
     delete = client.delete_access_key(UserName=username, AccessKeyId=access_key)
-    return print(delete)
+
+def create_key(username):
+    access_key_metadata = client.create_access_key(UserName=username)
+    access_key = access_key_metadata['AccessKey']['AccessKeyId']
+    secret_key = access_key_metadata['AccessKey']['SecretAccessKey']
+    print(access_key, secret_key)
 
 for i in OldkeyList:
     delete_key(i[-20:],i[:-20])
+    create_key(i[:-20])
+
+
+
     
 # print(OldkeyList[1][-20:])
 # print(OldkeyList[1][:-20])
