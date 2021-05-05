@@ -19,19 +19,33 @@ def get_old_access_key():
         if Metadata['AccessKeyMetadata']:
             for key in user.access_keys.all():
                 
-                # AccessId = key.access_key_id
+                AccessId = key.access_key_id
                 Status = key.status
                 CreatedDate = key.create_date
+                
 
                 numOfDays = diff_dates(utc_to_local(datetime.utcnow()), utc_to_local(CreatedDate))
-                # LastUsed = client.get_access_key_last_used(AccessKeyId=AccessId)
-                if numOfDays <= 90:
-                    OldkeyList.append(user.user_name)
+                LastUsed = client.get_access_key_last_used(AccessKeyId=AccessId)
+
+                if numOfDays <= 6:
+                    OldkeyList.append(user.user_name+AccessId)
                 # print(user.user_name, numOfDays)
 
                 # if (Status == "Active"):
                 #     if KEY in LastUsed['AccessKeyLastUsed']:
                 #         print("User:", user.user_name, numOfDays)
 
+get_old_access_key()
 
-print(OldkeyList)
+def delete_key(access_key, username):
+    delete = client.delete_access_key(UserName=username, AccessKeyId=access_key)
+    return print(delete)
+
+for i in OldkeyList:
+    delete_key(i[-20:],i[:-20])
+    
+# print(OldkeyList[1][-20:])
+# print(OldkeyList[1][:-20])
+# print(client.delete_access_key(UserName='bhs9610@naver.com'))
+
+# print(OldkeyList)
