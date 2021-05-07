@@ -1,4 +1,5 @@
 import boto3
+from botocore.exceptions import ClientError
 from datetime import datetime, timezone
 
 def utc_to_local(utc_dt):
@@ -14,7 +15,7 @@ KEY = 'LastUsedDate'
 AFTER_DAYS = 90
 
 OldkeyList = []
-email_text += += f"""
+email_text = f"""
 To learn how to rotate your AWS Access Key, please read the official guide at https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_RotateAccessKey
 If you have any question, please don't hesitate to contact the Support Team at changhyun.kim@example.com.
 
@@ -49,14 +50,25 @@ def get_old_access_key():
 
 get_old_access_key()
 
+def disable_key(access_key, username):
+    try:
+        client.update_access_key(UserName=username, AccessKeyId=access_key, Status="Inactive")
+        print(access_key + " has been disabled.")
+    except ClientError as e:
+        print("The access key with id %s cannot be found" % access_key)
+
 def delete_key(access_key, username):
-    delete = client.delete_access_key(UserName=username, AccessKeyId=access_key)
+    try:
+        delete = client.delete_access_key(UserName=username, AccessKeyId=access_key)
+    except ClientError as e:
+        print("The access key with id %s cannot be found" % access_key)
 
 def create_key(username):
     access_key_metadata = client.create_access_key(UserName=username)
     access_key = access_key_metadata['AccessKey']['AccessKeyId']
     secret_key = access_key_metadata['AccessKey']['SecretAccessKey']
     print(access_key, secret_key)
+
 
 for i in OldkeyList:
     delete_key(i[-20:],i[:-20])
