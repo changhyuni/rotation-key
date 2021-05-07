@@ -12,7 +12,7 @@ resource = boto3.resource('iam')
 client = boto3.client("iam")
 
 KEY = 'LastUsedDate'
-AFTER_DAYS = 90
+AFTER_DAYS = 10
 
 OldkeyList = []
 email_text = f"""
@@ -40,28 +40,25 @@ def get_old_access_key():
                 numOfDays = diff_dates(utc_to_local(datetime.utcnow()), utc_to_local(CreatedDate))
                 LastUsed = client.get_access_key_last_used(AccessKeyId=AccessId)
 
-                if numOfDays <= AFTER_DAYS:
-                    OldkeyList.append(user.user_name+AccessId)
+                if (numOfDays <= AFTER_DAYS and (Status == "Active")) and (KEY in LastUsed['AccessKeyLastUsed']):
+                        OldkeyList.append(user.user_name+AccessId)
                 # print(user.user_name, numOfDays)
 
-                # if (Status == "Active"):
-                #     if KEY in LastUsed['AccessKeyLastUsed']:
-                #         print("User:", user.user_name, numOfDays)
 
 get_old_access_key()
 
 def disable_key(access_key, username):
-    try:
-        client.update_access_key(UserName=username, AccessKeyId=access_key, Status="Inactive")
-        print(access_key + " has been disabled.")
-    except ClientError as e:
-        print("The access key with id %s cannot be found" % access_key)
+    # try:
+    client.update_access_key(UserName=username, AccessKeyId=access_key, Status="Inactive")
+    # print(access_key + " has been disabled.")
+    # except ClientError as e:
+        # print("The access key with id %s cannot be found" % access_key)
 
 def delete_key(access_key, username):
-    try:
-        delete = client.delete_access_key(UserName=username, AccessKeyId=access_key)
-    except ClientError as e:
-        print("The access key with id %s cannot be found" % access_key)
+    # try:
+    delete = client.delete_access_key(UserName=username, AccessKeyId=access_key)
+    # except ClientError as e:
+    #     print("The access key with id %s cannot be found" % access_key)
 
 def create_key(username):
     access_key_metadata = client.create_access_key(UserName=username)
@@ -71,6 +68,7 @@ def create_key(username):
 
 
 for i in OldkeyList:
+    disable_key(i[-20:],i[:-20])
     delete_key(i[-20:],i[:-20])
     create_key(i[:-20])
 
