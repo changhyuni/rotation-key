@@ -12,7 +12,7 @@ resource = boto3.resource('iam')
 client = boto3.client("iam")
 
 KEY = 'LastUsedDate'
-AFTER_DAYS = 10
+AFTER_DAYS = 3
 
 OldkeyList = []
 email_text = f"""
@@ -22,7 +22,7 @@ If you have any question, please don't hesitate to contact the Support Team at c
 This automatic reminder will be sent again in {AFTER_DAYS} days, if the key(s) will not be rotated.
 
 Regards,
-Your lovely Support Team
+Product Engineering DevOps Team
 """
 
 
@@ -40,7 +40,7 @@ def get_old_access_key():
                 numOfDays = diff_dates(utc_to_local(datetime.utcnow()), utc_to_local(CreatedDate))
                 LastUsed = client.get_access_key_last_used(AccessKeyId=AccessId)
 
-                if (numOfDays <= AFTER_DAYS and (Status == "Active")) and (KEY in LastUsed['AccessKeyLastUsed']):
+                if (numOfDays >= AFTER_DAYS  and (Status == "Active")) and (KEY in LastUsed['AccessKeyLastUsed']):
                         OldkeyList.append(user.user_name+AccessId)
                 # print(user.user_name, numOfDays)
 
